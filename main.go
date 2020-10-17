@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/mpetavy/common"
 	"github.com/veandco/go-sdl2/sdl"
+	"os"
 	"runtime"
 	"time"
 )
@@ -273,6 +274,11 @@ func run() error {
 			food.Pos = findNewFoodPos()
 		}
 
+		if len(snake.Tail) > 1 && collides(snake.Pos, snake.Tail[1:]...) {
+			common.Info("game over")
+			os.Exit(0)
+		}
+
 		if len(snake.Tail) > 0 {
 			if len(snake.Tail) > 1 {
 				copy(snake.Tail[1:], snake.Tail[0:len(snake.Tail)-1])
@@ -284,11 +290,6 @@ func run() error {
 		if common.Error(err) {
 			return err
 		}
-
-		//if len(snake.Tail) > 1 && snake.Bites(snake.Tail[1:]...) {
-		//	common.Info("game over")
-		//	os.Exit(0)
-		//}
 
 	}
 
