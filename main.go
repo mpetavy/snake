@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/mpetavy/common"
 	"github.com/veandco/go-sdl2/sdl"
+	"runtime"
+	"time"
 )
 
 const (
@@ -14,15 +16,18 @@ const (
 type Puppet struct {
 	Pos      int
 	LastMove func()
-	Color    uint32
+	Color    [4]uint8
 }
 
-func (p *Puppet) Paint() {
+func (p *Puppet) Paint() error {
 	x := p.Pos % RasterCount
 	y := p.Pos / RasterCount
 
 	rect := sdl.Rect{int32(x * PixelWidth), int32(y * PixelWidth), PixelWidth, PixelWidth}
-	surface.FillRect(&rect, p.Color)
+
+	renderer.SetDrawColor(p.Color[0],p.Color[1],p.Color[2],p.Color[3],)
+
+	return renderer.FillRect(&rect)
 }
 
 func contraint(v int, s int) int {
@@ -34,7 +39,7 @@ func contraint(v int, s int) int {
 }
 
 func (p *Puppet) Left() {
-	common.DebugFunc()
+	common.DebugFunc(p.Pos)
 
 	x := contraint(p.Pos%RasterCount, -1)
 	y := p.Pos / RasterCount
@@ -43,7 +48,7 @@ func (p *Puppet) Left() {
 }
 
 func (p *Puppet) Right() {
-	common.DebugFunc()
+	common.DebugFunc(p.Pos)
 
 	x := contraint(p.Pos%RasterCount, 1)
 	y := p.Pos / RasterCount
@@ -52,7 +57,7 @@ func (p *Puppet) Right() {
 }
 
 func (p *Puppet) Up() {
-	common.DebugFunc()
+	common.DebugFunc(p.Pos)
 
 	y := contraint(p.Pos/RasterCount, -1)
 	x := p.Pos % RasterCount
@@ -61,7 +66,7 @@ func (p *Puppet) Up() {
 }
 
 func (p *Puppet) Down() {
-	common.DebugFunc()
+	common.DebugFunc(p.Pos)
 
 	y := contraint(p.Pos/RasterCount, 1)
 	x := p.Pos % RasterCount
@@ -75,7 +80,7 @@ type Snake struct {
 }
 
 func (s *Snake) Bites(ps ...Puppet) bool {
-	for _,p := range ps {
+	for _, p := range ps {
 		if p.Pos == s.Pos {
 			common.DebugFunc()
 			return true
@@ -90,22 +95,23 @@ type Food struct {
 }
 
 var (
-	delay = 16
-	surface *sdl.Surface
-	window  *sdl.Window
-	snake   = Snake{
+	renderer *sdl.Renderer
+	window   *sdl.Window
+	snake    = Snake{
 		Puppet: Puppet{
 			Pos:   0,
-			Color: 0xffff0000,
+			Color: [4]uint8{255,255,255,0},
 		},
 	}
 	food = Food{
 		Puppet: Puppet{
 			Pos:   common.Rnd(RasterCount * RasterCount),
-			Color: 0xffffffff,
+			Color: [4]uint8{255,0,0,0},
 		},
 	}
-	snakeX, snakeY int
+
+	delay = time.Millisecond * 100
+	nextTime = time.Now()
 )
 
 func init() {
@@ -113,18 +119,22 @@ func init() {
 }
 
 func paint() {
-	surface.FillRect(nil, 0)
+	common.DebugFunc()
+
+	renderer.SetDrawColor(0,0,0,0)
+	renderer.Clear()
 
 	food.Paint()
 	snake.Paint()
 
-	window.UpdateSurface()
+	renderer.Present()
 }
 
 func run() error {
 	if err := sdl.Init(sdl.INIT_EVERYTHING); err != nil {
 		panic(err)
 	}
+
 	defer sdl.Quit()
 
 	var err error
@@ -137,51 +147,62 @@ func run() error {
 
 	defer window.Destroy()
 
-	surface, err = window.GetSurface()
+	renderer, err = sdl.CreateRenderer(window, -1, sdl.RENDERER_ACCELERATED)
 	if common.Error(err) {
 		return err
 	}
 
+	defer renderer.Destroy()
+
+	runtime.LockOSThread()
+
 	running := true
 
-	snake.LastMove = []func(){snake.Left,snake.Right,snake.Up,snake.Down}[common.Rnd(4)]
-
-	fmt.Printf("%+v\n",snake.LastMove)
+	snake.LastMove = []func(){snake.Left, snake.Right, snake.Up, snake.Down}[common.Rnd(4)]
 
 	paint()
 
 	for running {
+		move := snake.LastMove
+
 		event := sdl.PollEvent()
-		if event != nil {
-			switch t := event.(type) {
-			case *sdl.QuitEvent:
-				println("Quit")
-				running = false
-			case *sdl.KeyboardEvent:
-				keyCode := t.Keysym.Sym
+		if move == nil {
+			if event != nil {
+				switch t := event.(type) {
+				case *sdl.QuitEvent:
+					println("Quit")
+					running = false
+				case *sdl.KeyboardEvent:
+					keyCode := t.Keysym.Sym
 
-				var move func()
-
-				if t.State == sdl.PRESSED {
-					switch keyCode {
-					case sdl.K_LEFT:
-						move = snake.Left
-					case sdl.K_RIGHT:
-						move = snake.Right
-					case sdl.K_UP:
-						move = snake.Up
-					case sdl.K_DOWN:
-						move = snake.Down
+					if t.State == sdl.PRESSED {
+						switch keyCode {
+						case sdl.K_LEFT:
+							move = snake.Left
+						case sdl.K_RIGHT:
+							move = snake.Right
+						case sdl.K_UP:
+							move = snake.Up
+						case sdl.K_DOWN:
+							move = snake.Down
+						}
 					}
-
-					move()
-
-					snake.LastMove = move
 				}
 			}
-		} else {
-			//snake.LastMove()
 		}
+
+		if move == nil || time.Now().Before(nextTime){
+			continue
+		}
+
+		nextTime = nextTime.Add(delay)
+
+		move()
+		snake.LastMove = move
+
+		move = nil
+
+		paint()
 
 		//if len(snake.Tail) > 1 && snake.Bites(snake.Tail[1:]...) {
 		//	common.Info("game over")
@@ -189,12 +210,9 @@ func run() error {
 		//}
 
 		if snake.Bites(food.Puppet) {
-			tail := append(append(snake.Tail,food.Puppet),snake.Tail...)
+			tail := append(append(snake.Tail, food.Puppet), snake.Tail...)
 			snake.Tail = tail
 		}
-
-
-		paint()
 
 		//sdl.Delay(uint32(delay))
 	}
