@@ -21,151 +21,12 @@ const (
 )
 
 var (
-	SnakeColor  = [4]uint8{0, 255, 0, 0}
-	FoodColor   = [4]uint8{255, 0, 0, 0}
-	HungerColor = [4]uint8{255, 165, 0, 0}
-	TailColor   = [4]uint8{255, 255, 255, 0}
-	StoneColor  = [4]uint8{169, 169, 169, 0}
-)
-
-type Sprite struct {
-	Position int
-	Color    [4]uint8
-}
-
-func (s *Sprite) Paint() error {
-	x := s.Position % RasterCount
-	y := s.Position / RasterCount
-
-	rect := sdl.Rect{int32(x * PixelWidth), int32(y * PixelWidth), PixelWidth, PixelWidth}
-
-	err := renderer.SetDrawColor(s.Color[0], s.Color[1], s.Color[2], s.Color[3])
-	if common.Error(err) {
-		return err
-	}
-
-	err = renderer.FillRect(&rect)
-	if common.Error(err) {
-		return err
-	}
-
-	return nil
-}
-
-func contraint(v int, s int) int {
-	if v+s < 0 {
-		return RasterCount + (v + s)
-	} else {
-		return (v + s) % RasterCount
-	}
-}
-
-func (s *Sprite) Left() {
-	common.DebugFunc(s.Position)
-
-	x := contraint(s.Position%RasterCount, -1)
-	y := s.Position / RasterCount
-
-	s.Position = y*RasterCount + x
-}
-
-func (s *Sprite) Right() {
-	common.DebugFunc(s.Position)
-
-	x := contraint(s.Position%RasterCount, 1)
-	y := s.Position / RasterCount
-
-	s.Position = y*RasterCount + x
-}
-
-func (s *Sprite) Up() {
-	common.DebugFunc(s.Position)
-
-	y := contraint(s.Position/RasterCount, -1)
-	x := s.Position % RasterCount
-
-	s.Position = y*RasterCount + x
-}
-
-func (s *Sprite) Down() {
-	common.DebugFunc(s.Position)
-
-	y := contraint(s.Position/RasterCount, 1)
-	x := s.Position % RasterCount
-
-	s.Position = y*RasterCount + x
-}
-
-type Snake struct {
-	Sprite
-	LastMove func()
-	Tail     []int
-	Hunger   time.Duration
-}
-
-func NewSnake() *Snake {
-	snake := &Snake{
-		Sprite: Sprite{
-			Position: RasterCount * RasterCount / 2,
-			Color:    SnakeColor,
-		},
-		Tail: []int{RasterCount * RasterCount / 2, (RasterCount * RasterCount / 2) - 1},
-	}
-
-	snake.LastMove = []func(){snake.Right, snake.Up, snake.Down}[common.Rnd(3)]
-
-	return snake
-}
-
-func collides(pos int, ps ...int) bool {
-	for _, v := range ps {
-		if v == pos {
-			common.DebugFunc()
-
-			return true
-		}
-	}
-
-	return false
-}
-
-type Food struct {
-	Sprite
-}
-
-func NewFood() *Food {
-	food := &Food{
-		Sprite: Sprite{
-			Position: findFreePosition(),
-			Color:    FoodColor,
-		},
-	}
-
-	return food
-}
-
-type Stone struct {
-	Sprite
-}
-
-func NewStone() *Stone {
-	stone := &Stone{
-		Sprite: Sprite{
-			Position: findFreePosition(),
-			Color:    StoneColor,
-		},
-	}
-
-	return stone
-}
-
-var (
 	renderer *sdl.Renderer
 	window   *sdl.Window
+	gameOver *common.Notice
 	snake    *Snake
 	food     *Food
-	gameOver *common.Notice
-	stones   []int
+	stones   []*Stone
 )
 
 func init() {
@@ -176,7 +37,7 @@ func findFreePosition() int {
 	for {
 		pos := common.Rnd(RasterCount * RasterCount)
 
-		if !collides(pos, snake.Position) && !collides(pos, snake.Tail...) && !collides(pos, stones...) {
+		if !Collides(pos, snake.Position()) && (snake.Tails == nil || !Collides(pos, ToPositions(snake.Tails)...)) && (stones == nil || !Collides(pos, ToPositions(stones)...)) {
 			return pos
 		}
 	}
@@ -211,31 +72,20 @@ func paintScene() error {
 		return err
 	}
 
-	tail := Sprite{
-		Position: 0,
-	}
+	for _, tail := range snake.Tails {
+		if snake.Hunger > HungerDelay {
+			tail.color = HungerColor
+		} else {
+			tail.color = TailColor
+		}
 
-	if snake.Hunger > HungerDelay {
-		tail.Color = HungerColor
-	} else {
-		tail.Color = TailColor
-	}
-
-	for _, t := range snake.Tail {
-		tail.Position = t
 		err := tail.Paint()
 		if common.Error(err) {
 			return err
 		}
 	}
 
-	stone := Sprite{
-		Position: 0,
-		Color:    StoneColor,
-	}
-
-	for _, s := range stones {
-		stone.Position = s
+	for _, stone := range stones {
 		err := stone.Paint()
 		if common.Error(err) {
 			return err
@@ -252,7 +102,7 @@ func paintScene() error {
 	return nil
 }
 
-func drawTitle(r *sdl.Renderer, text string, size int) error {
+func paintTitle(r *sdl.Renderer, text string, size int) error {
 	err := r.Clear()
 	if common.Error(err) {
 		return err
@@ -326,15 +176,15 @@ func run() error {
 	}()
 
 	snake = NewSnake()
-	food = NewFood()
+	food = NewFood(findFreePosition())
 	gameOver = common.NewNotice()
-	stones = make([]int, StoneCount)
+	stones = make([]*Stone, 0)
 
-	for i := 0; i < len(stones); i++ {
-		stones[i] = findFreePosition()
+	for i := 0; i < StoneCount; i++ {
+		stones = append(stones, NewStone(findFreePosition()))
 	}
 
-	err = drawTitle(renderer, common.Title(), 20)
+	err = paintTitle(renderer, common.Title(), 20)
 	if common.Error(err) {
 		return err
 	}
@@ -389,9 +239,9 @@ func run() error {
 
 		for i := 0; i < 10; i++ {
 			if i%2 == 0 {
-				snake.Color = HungerColor
+				snake.color = HungerColor
 			} else {
-				snake.Color = FoodColor
+				snake.color = FoodColor
 			}
 
 			common.Error(paintScene())
@@ -400,12 +250,12 @@ func run() error {
 		}
 
 		common.Error(newScene())
-		common.Error(drawTitle(renderer, "Game over!!", 10))
+		common.Error(paintTitle(renderer, "Game over!!", 10))
 
 		time.Sleep(TitleDuration)
 
 		common.Error(newScene())
-		common.Error(drawTitle(renderer, fmt.Sprintf("Score: %d", (len(snake.Tail)-2)*10), 10))
+		common.Error(paintTitle(renderer, fmt.Sprintf("Score: %d", (len(snake.Tails)-2)*10), 10))
 
 		time.Sleep(TitleDuration)
 	}()
@@ -422,39 +272,44 @@ func run() error {
 				gameOver.Set()
 				continue
 			}
-
 		case move = <-moves:
-			if move == nil {
-				gameOver.Set()
-				continue
-			}
 		}
 
-		lastPos := snake.Position
+		if move == nil {
+			continue
+		}
+
+		if Collides(snake.Peek(move), ToPositions(stones)...) {
+			snake.LastMove = nil
+
+			continue
+		}
+
+		lastPos := snake.Position()
 
 		move()
 		snake.LastMove = move
 
-		if collides(snake.Position, food.Position) {
-			snake.Tail = append(snake.Tail, lastPos)
+		if Collides(snake.position, food.position) {
+			snake.Tails = append(snake.Tails, NewTail(lastPos))
 
 			snake.Hunger = 0
-			snake.Color = SnakeColor
+			snake.color = SnakeColor
 
-			food.Position = findFreePosition()
+			food.position = findFreePosition()
 		}
 
-		if len(snake.Tail) > 1 && collides(snake.Position, snake.Tail[1:]...) {
+		if len(snake.Tails) > 1 && Collides(snake.position, ToPositions(snake.Tails[1:])...) {
 			gameOver.Set()
 
 			continue
 		}
 
-		if len(snake.Tail) > 0 {
-			if len(snake.Tail) > 1 {
-				copy(snake.Tail[1:], snake.Tail[0:len(snake.Tail)-1])
+		if len(snake.Tails) > 0 {
+			if len(snake.Tails) > 1 {
+				copy(snake.Tails[1:], snake.Tails[0:len(snake.Tails)-1])
 			}
-			snake.Tail[0] = snake.Position
+			snake.Tails[0] = NewTail(snake.Position())
 		}
 
 		err = paintScene()
