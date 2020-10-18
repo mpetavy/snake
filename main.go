@@ -5,6 +5,7 @@ import (
 	"github.com/mpetavy/common"
 	"github.com/veandco/go-sdl2/sdl"
 	"runtime"
+	"sync"
 	"time"
 )
 
@@ -143,6 +144,7 @@ var (
 	window   *sdl.Window
 	snake    = NewSnake()
 	food     = NewFood()
+	gameOver = common.NewNotice()
 )
 
 func init() {
@@ -242,11 +244,13 @@ func run() error {
 	}
 
 	moves := make(chan func())
+	wg := sync.WaitGroup{}
 
+	wg.Add(1)
 	go func() {
-		running := true
+		defer wg.Done()
 
-		for running {
+		for !gameOver.IsSet() {
 			event := sdl.PollEvent()
 			if event == nil {
 				continue
@@ -254,7 +258,7 @@ func run() error {
 
 			switch t := event.(type) {
 			case *sdl.QuitEvent:
-				running = false
+				gameOver.Set()
 				continue
 			case *sdl.KeyboardEvent:
 				keyCode := t.Keysym.Sym
@@ -277,8 +281,7 @@ func run() error {
 		close(moves)
 	}()
 
-	running := true
-	for running {
+	for !gameOver.IsSet() {
 		var move func()
 
 		select {
@@ -287,13 +290,13 @@ func run() error {
 
 			snake.Hunger += GameDelay
 			if snake.Hunger > DeadDelay {
-				running = false
+				gameOver.Set()
 				continue
 			}
 
 		case move = <-moves:
 			if move == nil {
-				running = false
+				gameOver.Set()
 				continue
 			}
 		}
@@ -328,6 +331,9 @@ func run() error {
 			return err
 		}
 	}
+
+	wg.Wait()
+
 	common.Info("Game over!!")
 
 	return nil
