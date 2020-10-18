@@ -13,7 +13,6 @@ import (
 const (
 	RasterCount   = 20
 	PixelWidth    = 20
-	StoneCount    = RasterCount / 2
 	GameDelay     = time.Millisecond * 150
 	DeadDelay     = GameDelay * time.Duration((RasterCount+2)*2)
 	HungerDelay   = DeadDelay / 2
@@ -180,9 +179,7 @@ func run() error {
 	gameOver = common.NewNotice()
 	stones = make([]*Stone, 0)
 
-	for i := 0; i < StoneCount; i++ {
-		stones = append(stones, NewStone(findFreePosition()))
-	}
+	stones = append(stones, NewStone(findFreePosition()))
 
 	err = paintTitle(renderer, common.Title(), 20)
 	if common.Error(err) {
@@ -297,6 +294,8 @@ func run() error {
 			snake.color = SnakeColor
 
 			food.position = findFreePosition()
+
+			stones = append(stones, NewStone(findFreePosition()))
 		}
 
 		if len(snake.Tails) > 1 && Collides(snake.position, ToPositions(snake.Tails[1:])...) {
