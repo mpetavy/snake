@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/mpetavy/common"
 	"github.com/veandco/go-sdl2/sdl"
-	"os"
 	"runtime"
 	"time"
 )
@@ -12,6 +11,16 @@ import (
 const (
 	RasterCount = 20
 	PixelWidth  = 20
+	GameDelay   = time.Millisecond * 150
+	HungerDelay = time.Duration(2000) * time.Millisecond
+	DeadDelay   = time.Duration(4000) * time.Millisecond
+)
+
+var (
+	SnakeColor  = [4]uint8{0, 255, 0, 0}
+	FoodColor   = [4]uint8{255, 0, 0, 0}
+	HungerColor = [4]uint8{255, 165, 0, 0}
+	TailColor   = [4]uint8{255, 255, 255, 0}
 )
 
 type Puppet struct {
@@ -86,6 +95,21 @@ type Snake struct {
 	Puppet
 	LastMove func()
 	Tail     []int
+	Hunger   time.Duration
+}
+
+func NewSnake() *Snake {
+	snake := &Snake{
+		Puppet: Puppet{
+			Pos:   RasterCount * RasterCount / 2,
+			Color: SnakeColor,
+		},
+		Tail: []int{RasterCount * RasterCount / 2, (RasterCount * RasterCount / 2) - 1},
+	}
+
+	snake.LastMove = []func(){snake.Right, snake.Up, snake.Down}[common.Rnd(3)]
+
+	return snake
 }
 
 func collides(pos int, ps ...int) bool {
@@ -103,26 +127,26 @@ type Food struct {
 	Puppet
 }
 
+func NewFood() *Food {
+	food := &Food{
+		Puppet: Puppet{
+			Pos:   findNewFoodPos(),
+			Color: FoodColor,
+		},
+	}
+
+	return food
+}
+
 var (
 	renderer *sdl.Renderer
 	window   *sdl.Window
-	snake    = Snake{
-		Puppet: Puppet{
-			Pos:   0,
-			Color: [4]uint8{0, 255, 0, 0},
-		},
-		Tail: make([]int, 1),
-	}
-	food = Food{
-		Puppet: Puppet{
-			Pos:   findNewFoodPos(),
-			Color: [4]uint8{255, 0, 0, 0},
-		},
-	}
+	snake    = NewSnake()
+	food     = NewFood()
 )
 
 func init() {
-	common.Init(false, "1.0.8", "", "2020", "Snake game", "mpetavy", fmt.Sprintf("https://github.com/mpetavy/%s", common.Title()), common.APACHE, nil, nil, run, 0)
+	common.Init(false, "1.0.0", "", "2020", "Snake game", "mpetavy", fmt.Sprintf("https://github.com/mpetavy/%s", common.Title()), common.APACHE, nil, nil, run, 0)
 }
 
 func findNewFoodPos() int {
@@ -154,8 +178,13 @@ func paint() error {
 	}
 
 	tail := Puppet{
-		Pos:   0,
-		Color: [4]uint8{255, 255, 255, 0},
+		Pos: 0,
+	}
+
+	if snake.Hunger > HungerDelay {
+		tail.Color = HungerColor
+	} else {
+		tail.Color = TailColor
 	}
 
 	for _, t := range snake.Tail {
@@ -177,6 +206,9 @@ func paint() error {
 }
 
 func run() error {
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
+
 	if err := sdl.Init(sdl.INIT_EVERYTHING); err != nil {
 		panic(err)
 	}
@@ -203,10 +235,6 @@ func run() error {
 	defer func() {
 		common.Error(renderer.Destroy())
 	}()
-
-	runtime.LockOSThread()
-
-	snake.LastMove = []func(){snake.Left, snake.Right, snake.Up, snake.Down}[common.Rnd(4)]
 
 	err = paint()
 	if common.Error(err) {
@@ -254,8 +282,15 @@ func run() error {
 		var move func()
 
 		select {
-		case <-time.After(time.Millisecond * 200):
+		case <-time.After(GameDelay):
 			move = snake.LastMove
+
+			snake.Hunger += GameDelay
+			if snake.Hunger > DeadDelay {
+				running = false
+				continue
+			}
+
 		case move = <-moves:
 			if move == nil {
 				running = false
@@ -271,12 +306,14 @@ func run() error {
 		if collides(snake.Pos, food.Pos) {
 			snake.Tail = append(snake.Tail, lastPos)
 
+			snake.Hunger = 0
+			snake.Color = SnakeColor
+
 			food.Pos = findNewFoodPos()
 		}
 
 		if len(snake.Tail) > 1 && collides(snake.Pos, snake.Tail[1:]...) {
-			common.Info("game over")
-			os.Exit(0)
+			return nil
 		}
 
 		if len(snake.Tail) > 0 {
@@ -290,8 +327,8 @@ func run() error {
 		if common.Error(err) {
 			return err
 		}
-
 	}
+	common.Info("Game over!!")
 
 	return nil
 }
