@@ -4,17 +4,19 @@ import (
 	"fmt"
 	"github.com/mpetavy/common"
 	"github.com/veandco/go-sdl2/sdl"
+	"github.com/veandco/go-sdl2/ttf"
 	"runtime"
 	"sync"
 	"time"
 )
 
 const (
-	RasterCount = 20
-	PixelWidth  = 20
-	GameDelay   = time.Millisecond * 150
-	HungerDelay = time.Duration(2000) * time.Millisecond
-	DeadDelay   = time.Duration(4000) * time.Millisecond
+	RasterCount   = 20
+	PixelWidth    = 20
+	GameDelay     = time.Millisecond * 150
+	DeadDelay     = GameDelay * time.Duration((RasterCount+2)*2)
+	HungerDelay   = DeadDelay / 2
+	TitleDuration = 2 * time.Second
 )
 
 var (
@@ -117,6 +119,7 @@ func collides(pos int, ps ...int) bool {
 	for _, v := range ps {
 		if v == pos {
 			common.DebugFunc()
+
 			return true
 		}
 	}
@@ -161,7 +164,7 @@ func findNewFoodPos() int {
 	}
 }
 
-func paint() error {
+func newScene() error {
 	common.DebugFunc()
 
 	err := renderer.SetDrawColor(0, 0, 0, 0)
@@ -170,6 +173,17 @@ func paint() error {
 	}
 
 	err = renderer.Clear()
+	if common.Error(err) {
+		return err
+	}
+
+	return nil
+}
+
+func paint() error {
+	common.DebugFunc()
+
+	err := newScene()
 	if common.Error(err) {
 		return err
 	}
@@ -207,6 +221,43 @@ func paint() error {
 	return nil
 }
 
+func drawTitle(r *sdl.Renderer, text string, size int) error {
+	err := r.Clear()
+	if common.Error(err) {
+		return err
+	}
+
+	f, err := ttf.OpenFont("res/fonts/Flappy.ttf", size)
+	if common.Error(err) {
+		return err
+	}
+	defer f.Close()
+
+	c := sdl.Color{R: 255, G: 100, B: 0, A: 255}
+	s, err := f.RenderUTF8Solid(text, c)
+	if common.Error(err) {
+		return err
+	}
+	defer s.Free()
+
+	t, err := r.CreateTextureFromSurface(s)
+	if common.Error(err) {
+		return err
+	}
+	defer func() {
+		common.Error(t.Destroy())
+	}()
+
+	err = r.Copy(t, nil, nil)
+	if common.Error(err) {
+		return err
+	}
+
+	r.Present()
+
+	return nil
+}
+
 func run() error {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
@@ -216,6 +267,11 @@ func run() error {
 	}
 
 	defer sdl.Quit()
+
+	if err := ttf.Init(); err != nil {
+		return fmt.Errorf("could not initialize TTF: %v", err)
+	}
+	defer ttf.Quit()
 
 	var err error
 
@@ -237,6 +293,13 @@ func run() error {
 	defer func() {
 		common.Error(renderer.Destroy())
 	}()
+
+	err = drawTitle(renderer, common.Title(), 20)
+	if common.Error(err) {
+		return err
+	}
+
+	time.Sleep(TitleDuration)
 
 	err = paint()
 	if common.Error(err) {
@@ -281,6 +344,32 @@ func run() error {
 		close(moves)
 	}()
 
+	defer func() {
+		wg.Wait()
+
+		for i := 0; i < 10; i++ {
+			if i%2 == 0 {
+				snake.Color = HungerColor
+			} else {
+				snake.Color = FoodColor
+			}
+
+			common.Error(paint())
+
+			time.Sleep(200 * time.Millisecond)
+		}
+
+		common.Error(newScene())
+		common.Error(drawTitle(renderer, "Game over!!", 10))
+
+		time.Sleep(TitleDuration)
+
+		common.Error(newScene())
+		common.Error(drawTitle(renderer, fmt.Sprintf("Score: %d", (len(snake.Tail)-2)*10), 10))
+
+		time.Sleep(TitleDuration)
+	}()
+
 	for !gameOver.IsSet() {
 		var move func()
 
@@ -316,7 +405,9 @@ func run() error {
 		}
 
 		if len(snake.Tail) > 1 && collides(snake.Pos, snake.Tail[1:]...) {
-			return nil
+			gameOver.Set()
+
+			continue
 		}
 
 		if len(snake.Tail) > 0 {
@@ -331,10 +422,6 @@ func run() error {
 			return err
 		}
 	}
-
-	wg.Wait()
-
-	common.Info("Game over!!")
 
 	return nil
 }
