@@ -23,6 +23,7 @@ var (
 	renderer *sdl.Renderer
 	window   *sdl.Window
 	gameOver *common.Notice
+	ranking  *Ranking
 	snake    *Snake
 	food     *Food
 	stones   []*Stone
@@ -142,6 +143,8 @@ func run() error {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 
+	ranking = LoadlRanking()
+
 	if err := sdl.Init(sdl.INIT_EVERYTHING); err != nil {
 		panic(err)
 	}
@@ -155,7 +158,7 @@ func run() error {
 
 	var err error
 
-	window, err = sdl.CreateWindow("test", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
+	window, err = sdl.CreateWindow(common.TitleVersion(true, true, true), sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
 		RasterCount*PixelWidth, RasterCount*PixelWidth, sdl.WINDOW_SHOWN)
 	if common.Error(err) {
 		return err
@@ -234,7 +237,7 @@ func run() error {
 	defer func() {
 		wg.Wait()
 
-		for i := 0; i < 10; i++ {
+		for i := 0; i < 5; i++ {
 			if i%2 == 0 {
 				snake.color = HungerColor
 			} else {
@@ -251,8 +254,20 @@ func run() error {
 
 		time.Sleep(TitleDuration)
 
+		points := (len(snake.Tails) - 2) * 10
+
+		err, highscore := ranking.Score(points)
+		common.Error(err)
+
+		if highscore {
+			common.Error(newScene())
+			common.Error(paintTitle(renderer, "Highscore!!", 10))
+
+			time.Sleep(TitleDuration)
+		}
+
 		common.Error(newScene())
-		common.Error(paintTitle(renderer, fmt.Sprintf("Score: %d", (len(snake.Tails)-2)*10), 10))
+		common.Error(paintTitle(renderer, fmt.Sprintf("%d", points), 10))
 
 		time.Sleep(TitleDuration)
 	}()
