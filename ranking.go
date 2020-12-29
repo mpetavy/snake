@@ -11,17 +11,13 @@ type Ranking struct {
 	Scores map[string]int
 }
 
-func filename() string {
-	return common.AppFilename("-ranking.json")
-}
-
 func LoadlRanking() *Ranking {
 	ranking := &Ranking{}
 	ranking.Scores = make(map[string]int)
 
-	b, _ := common.FileExists(filename())
+	b, _ := common.FileExists(filename)
 	if b {
-		ba, err := ioutil.ReadFile(filename())
+		ba, err := ioutil.ReadFile(filename)
 		if !common.Error(err) {
 			err = json.Unmarshal(ba, ranking)
 			if !common.Error(err) {
@@ -76,7 +72,7 @@ func (r *Ranking) Save() error {
 		return err
 	}
 
-	err = ioutil.WriteFile(filename(), ba, common.DefaultFileMode)
+	err = ioutil.WriteFile(filename, ba, common.DefaultFileMode)
 	if common.Error(err) {
 		return err
 	}
