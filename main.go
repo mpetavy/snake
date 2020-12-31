@@ -5,6 +5,8 @@ import (
 	"github.com/mpetavy/common"
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
+	"os"
+	"path/filepath"
 	"runtime"
 	"sync"
 	"time"
@@ -20,6 +22,7 @@ const (
 )
 
 var (
+	filename string
 	renderer *sdl.Renderer
 	window   *sdl.Window
 	gameOver *common.Notice
@@ -140,6 +143,15 @@ func paintTitle(r *sdl.Renderer, text string, size int) error {
 }
 
 func run() error {
+	var err error
+
+	filename, err = os.UserHomeDir()
+	if common.Error(err) {
+		return err
+	}
+
+	filename = filepath.Join(filename, common.AppFilename("-ranking.json"))
+
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 
@@ -155,8 +167,6 @@ func run() error {
 		return fmt.Errorf("could not initialize TTF: %v", err)
 	}
 	defer ttf.Quit()
-
-	var err error
 
 	window, err = sdl.CreateWindow(common.TitleVersion(true, true, true), sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
 		RasterCount*PixelWidth, RasterCount*PixelWidth, sdl.WINDOW_SHOWN)
