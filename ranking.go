@@ -15,8 +15,7 @@ func LoadlRanking() *Ranking {
 	ranking := &Ranking{}
 	ranking.Scores = make(map[string]int)
 
-	b, _ := common.FileExists(filename)
-	if b {
+	if common.FileExists(filename) {
 		ba, err := ioutil.ReadFile(filename)
 		if !common.Error(err) {
 			err = json.Unmarshal(ba, ranking)
