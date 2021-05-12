@@ -25,7 +25,7 @@ var (
 	filename string
 	renderer *sdl.Renderer
 	window   *sdl.Window
-	gameOver *common.Notice
+	running  *common.Notice
 	ranking  *Ranking
 	snake    *Snake
 	food     *Food
@@ -33,7 +33,7 @@ var (
 )
 
 func init() {
-	common.Init(false, "1.0.0", "", "2020", "Snake game", "mpetavy", fmt.Sprintf("https://github.com/mpetavy/%s", common.Title()), common.APACHE, nil, nil, nil, run, 0)
+	common.Init(false, "1.0.0", "", "", "2020", "Snake game", "mpetavy", fmt.Sprintf("https://github.com/mpetavy/%s", common.Title()), common.APACHE, nil, nil, nil, run, 0)
 }
 
 func findFreePosition() int {
@@ -189,7 +189,7 @@ func run() error {
 
 	snake = NewSnake()
 	food = NewFood(findFreePosition())
-	gameOver = common.NewNotice()
+	running = common.NewNotice()
 	stones = make([]*Stone, 0)
 
 	stones = append(stones, NewStone(findFreePosition()))
@@ -213,7 +213,7 @@ func run() error {
 	go func() {
 		defer wg.Done()
 
-		for !gameOver.IsSet() {
+		for running.IsSet() {
 			event := sdl.PollEvent()
 			if event == nil {
 				continue
@@ -221,7 +221,7 @@ func run() error {
 
 			switch t := event.(type) {
 			case *sdl.QuitEvent:
-				gameOver.Set()
+				running.Unset()
 				continue
 			case *sdl.KeyboardEvent:
 				keyCode := t.Keysym.Sym
@@ -282,7 +282,7 @@ func run() error {
 		time.Sleep(TitleDuration)
 	}()
 
-	for !gameOver.IsSet() {
+	for running.IsSet() {
 		var move func()
 
 		select {
@@ -291,7 +291,7 @@ func run() error {
 
 			snake.Hunger += GameDelay
 			if snake.Hunger > DeadDelay {
-				gameOver.Set()
+				running.Unset()
 				continue
 			}
 		case move = <-moves:
@@ -324,7 +324,7 @@ func run() error {
 		}
 
 		if len(snake.Tails) > 1 && Collides(snake.position, ToPositions(snake.Tails[1:])...) {
-			gameOver.Set()
+			running.Unset()
 
 			continue
 		}
