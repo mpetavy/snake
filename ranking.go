@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"github.com/mpetavy/common"
-	"io/ioutil"
+	"os"
 	"os/user"
 )
 
@@ -16,7 +16,7 @@ func LoadlRanking() *Ranking {
 	ranking.Scores = make(map[string]int)
 
 	if common.FileExists(filename) {
-		ba, err := ioutil.ReadFile(filename)
+		ba, err := os.ReadFile(filename)
 		if !common.Error(err) {
 			err = json.Unmarshal(ba, ranking)
 			if !common.Error(err) {
@@ -71,7 +71,7 @@ func (r *Ranking) Save() error {
 		return err
 	}
 
-	err = ioutil.WriteFile(filename, ba, common.DefaultFileMode)
+	err = os.WriteFile(filename, ba, common.DefaultFileMode)
 	if common.Error(err) {
 		return err
 	}
