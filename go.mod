@@ -3,7 +3,7 @@ module snake
 go 1.16
 
 require (
-	github.com/mpetavy/common v1.4.32
+	github.com/mpetavy/common v1.4.33
 	github.com/veandco/go-sdl2 v0.4.4
 )
 
