@@ -3,7 +3,7 @@ module snake
 go 1.19
 
 require (
-	github.com/mpetavy/common v1.4.53
+	github.com/mpetavy/common v1.5.1
 	github.com/veandco/go-sdl2 v0.4.25
 )
 
@@ -50,7 +50,7 @@ require (
 	golang.org/x/sys v0.1.0 // indirect
 	golang.org/x/text v0.4.0 // indirect
 	golang.org/x/time v0.1.0 // indirect
-	google.golang.org/api v0.101.0 // indirect
+	google.golang.org/api v0.102.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20221027153422-115e99e71e1c // indirect
 	google.golang.org/grpc v1.50.1 // indirect
