@@ -199,7 +199,7 @@ func run() error {
 		return err
 	}
 
-	time.Sleep(TitleDuration)
+	common.Sleep(TitleDuration)
 
 	err = paintScene()
 	if common.Error(err) {
@@ -258,13 +258,13 @@ func run() error {
 
 			common.Error(paintScene())
 
-			time.Sleep(200 * time.Millisecond)
+			common.Sleep(200 * time.Millisecond)
 		}
 
 		common.Error(newScene())
 		common.Error(paintTitle(renderer, "Game over!!", 10))
 
-		time.Sleep(TitleDuration)
+		common.Sleep(TitleDuration)
 
 		points := (len(snake.Tails) - 2) * 10
 
@@ -275,13 +275,13 @@ func run() error {
 			common.Error(newScene())
 			common.Error(paintTitle(renderer, "Highscore!!", 10))
 
-			time.Sleep(TitleDuration)
+			common.Sleep(TitleDuration)
 		}
 
 		common.Error(newScene())
 		common.Error(paintTitle(renderer, fmt.Sprintf("%d", points), 10))
 
-		time.Sleep(TitleDuration)
+		common.Sleep(TitleDuration)
 	}()
 
 	for running.IsSet() {
