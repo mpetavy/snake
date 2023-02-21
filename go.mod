@@ -1,9 +1,9 @@
 module snake
 
-go 1.19
+go 1.20
 
 require (
-	github.com/mpetavy/common v1.5.50
+	github.com/mpetavy/common v1.5.51
 	github.com/veandco/go-sdl2 v0.4.25
 )
 
