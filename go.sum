@@ -110,8 +110,8 @@ github.com/mattn/go-colorable v0.1.13/go.mod h1:7S9/ev0klgBDR4GtXTXX8a3vIGJpMovk
 github.com/mattn/go-isatty v0.0.14/go.mod h1:7GGIvUiUoEMVVmxf/4nioHXj79iQHKdU27kJ6hsGG94=
 github.com/mattn/go-isatty v0.0.16 h1:bq3VjFmv/sOjHtdEhmkEV4x1AJtvUvOJ2PFAZ5+peKQ=
 github.com/mattn/go-isatty v0.0.16/go.mod h1:kYGgaQfpe5nmfYZH+SKPsOc2e4SrIfOl2e/yFXSvRLM=
-github.com/mpetavy/common v1.5.59 h1:e+pwPUqLU78sTyELRgHMlU1czqhU7prd5Qp1lDcHyI8=
-github.com/mpetavy/common v1.5.59/go.mod h1:ex0A8iV3CEYpgVti6CLutOawkFDt9A7ZwVrkzCZot/A=
+github.com/mpetavy/common v1.5.60 h1:qo2xg099SekOMCU3wEM8bEaoDddTIRsrhWIGnaYYPrU=
+github.com/mpetavy/common v1.5.60/go.mod h1:ex0A8iV3CEYpgVti6CLutOawkFDt9A7ZwVrkzCZot/A=
 github.com/paulrosania/go-charset v0.0.0-20190326053356-55c9d7a5834c h1:P6XGcuPTigoHf4TSu+3D/7QOQ1MbL6alNwrGhcW7sKw=
 github.com/paulrosania/go-charset v0.0.0-20190326053356-55c9d7a5834c/go.mod h1:YnNlZP7l4MhyGQ4CBRwv6ohZTPrUJJZtEv4ZgADkbs4=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
