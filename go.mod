@@ -3,7 +3,7 @@ module snake
 go 1.19
 
 require (
-	github.com/mpetavy/common v1.5.62
+	github.com/mpetavy/common v1.5.63
 	github.com/veandco/go-sdl2 v0.4.25
 )
 
@@ -42,7 +42,6 @@ require (
 	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/paulrosania/go-charset v0.0.0-20190326053356-55c9d7a5834c // indirect
 	github.com/quasoft/memstore v0.0.0-20191010062613-2bce066d2b0b // indirect
-	github.com/robertkrimen/otto v0.2.1 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
@@ -60,7 +59,6 @@ require (
 	google.golang.org/genproto v0.0.0-20221027153422-115e99e71e1c // indirect
 	google.golang.org/grpc v1.50.1 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
-	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	software.sslmate.com/src/go-pkcs12 v0.2.0 // indirect
 )
 
