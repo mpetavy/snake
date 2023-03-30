@@ -113,8 +113,10 @@ github.com/mattn/go-isatty v0.0.14/go.mod h1:7GGIvUiUoEMVVmxf/4nioHXj79iQHKdU27k
 github.com/mattn/go-isatty v0.0.16 h1:bq3VjFmv/sOjHtdEhmkEV4x1AJtvUvOJ2PFAZ5+peKQ=
 github.com/mattn/go-isatty v0.0.16/go.mod h1:kYGgaQfpe5nmfYZH+SKPsOc2e4SrIfOl2e/yFXSvRLM=
 github.com/mattn/go-sqlite3 v1.14.16 h1:yOQRA0RpS5PFz/oikGwBEqvAWhWg5ufRz4ETLjwpU1Y=
-github.com/mpetavy/common v1.5.65 h1:9WoSbyySQ8b4c46LvCso0Bdz0F3YoKLKpSRkuV3crwA=
-github.com/mpetavy/common v1.5.65/go.mod h1:sv9JshVjMxTgHdszbMMRPqzIjqXwo1wBCjd1MY74xvg=
+github.com/mpetavy/common v1.5.66 h1:b+UPYXXEyOyjFzrNL5XV8l39uWr7sj9FfecK7gV9i1I=
+github.com/mpetavy/common v1.5.66/go.mod h1:9nha5SChzVqcBHv3TR1kFAscSHigBJKDTH9hu08S3iU=
+github.com/ompluscator/dynamic-struct v1.4.0 h1:I/Si9LZtItSwiTMe7vosEuIu2TKdOvWbE3R/lokpN4Q=
+github.com/ompluscator/dynamic-struct v1.4.0/go.mod h1:ADQ1+6Ox1D+ntuNwTHyl1NvpAqY2lBXPSPbcO4CJdeA=
 github.com/paulrosania/go-charset v0.0.0-20190326053356-55c9d7a5834c h1:P6XGcuPTigoHf4TSu+3D/7QOQ1MbL6alNwrGhcW7sKw=
 github.com/paulrosania/go-charset v0.0.0-20190326053356-55c9d7a5834c/go.mod h1:YnNlZP7l4MhyGQ4CBRwv6ohZTPrUJJZtEv4ZgADkbs4=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
