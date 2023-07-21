@@ -3,7 +3,7 @@ module snake
 go 1.20
 
 require (
-	github.com/mpetavy/common v1.6.4
+	github.com/mpetavy/common v1.6.5
 	github.com/veandco/go-sdl2 v0.4.35
 )
 
