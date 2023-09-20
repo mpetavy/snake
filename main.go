@@ -1,6 +1,7 @@
 package main
 
 import (
+	"embed"
 	"fmt"
 	"github.com/mpetavy/common"
 	"github.com/veandco/go-sdl2/sdl"
@@ -30,6 +31,9 @@ var (
 	snake    *Snake
 	food     *Food
 	stones   []*Stone
+
+	//go:embed res
+	res embed.FS
 )
 
 func init() {
@@ -111,7 +115,22 @@ func paintTitle(r *sdl.Renderer, text string, size int) error {
 		return err
 	}
 
-	f, err := ttf.OpenFont("res/fonts/Flappy.ttf", size)
+	ba, err := res.ReadFile("res/fonts/Flappy.ttf")
+	if common.Error(err) {
+		return err
+	}
+
+	tempf, err := common.CreateTempFile()
+	if common.Error(err) {
+		return err
+	}
+
+	err = os.WriteFile(tempf.Name(), ba, os.ModePerm)
+	if common.Error(err) {
+		return err
+	}
+
+	f, err := ttf.OpenFont(tempf.Name(), size)
 	if common.Error(err) {
 		return err
 	}
