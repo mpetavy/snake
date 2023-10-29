@@ -5,7 +5,7 @@ go 1.21
 toolchain go1.21.1
 
 require (
-	github.com/mpetavy/common v1.6.20
+	github.com/mpetavy/common v1.6.21
 	github.com/veandco/go-sdl2 v0.4.35
 )
 
