@@ -36,8 +36,11 @@ var (
 	res embed.FS
 )
 
+//go:embed go.mod
+var resources embed.FS
+
 func init() {
-	common.Init("snake", "", "", "", "2020", "Snake game", "mpetavy", fmt.Sprintf("https://github.com/mpetavy/%s", common.Title()), common.APACHE, nil, nil, nil, run, 0)
+	common.Init("", "", "", "", "Snake game", "", "", "", &resources, nil, nil, run, 0)
 }
 
 func findFreePosition() int {
