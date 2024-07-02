@@ -211,7 +211,7 @@ func run() error {
 
 	snake = NewSnake()
 	food = NewFood(findFreePosition())
-	running = common.NewNotice(true)
+	running = common.NewNotice()
 	stones = make([]*Stone, 0)
 
 	stones = append(stones, NewStone(findFreePosition()))
