@@ -128,7 +128,7 @@ func paintTitle(r *sdl.Renderer, text string, size int) error {
 		return err
 	}
 
-	err = os.WriteFile(tempf.Name(), ba, os.ModePerm)
+	err = os.WriteFile(tempf.Name(), ba, common.DefaultFileMode)
 	if common.Error(err) {
 		return err
 	}
